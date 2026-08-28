@@ -17,7 +17,7 @@ heter_endo_gmm(YE, YN, D, s, n_param = 5, tol = 1e-06)
 
 \item{n_param}{: number of parameters to estimate}
 
-\item{tol}{: convergence criteria of optimization}
+\item{tol}{: convergency criteria of optimization}
 }
 \value{
 dataframe with the estimates values of direct effect (delta), intra_group effect (theta_within), inter-group effect(theta_between) and their standard errors.

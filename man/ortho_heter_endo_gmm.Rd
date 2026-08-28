@@ -19,7 +19,7 @@ ortho_heter_endo_gmm(YM, YF, D, sM, sEM, sEF, tol = 1e-06)
 
 \item{sEF}{share of eligible "female" individuals in the group (vector)}
 
-\item{tol}{: convergence criteria of optimization}
+\item{tol}{: convergency criteria of optimization}
 }
 \value{
 dataframe of the estimates values of direct effect (delta), within effect among male (theta_within_M),within effect among female (theta_within_F), between effect from male to female (theta_between_F_M),  between effect from female to male (theta_between_M_F) and their standard errors.
