@@ -2,9 +2,9 @@ Package: heterogeneouspeereffects
 Title: Heterogeneous Peer Effect
 Version: 0.0.0.9000
 Authors@R: c(
-    person("Felix", "Pasquier", , "felix.pasquier@ensae.fr", role = c("aut")),
-    person("Pauline", "Rossi", email = "pauline.rossi@ensae.fr", role = "aut",
-       comment = c(affiliation = "CREST")),
+    person("Felix", "Pasquier", , "felix.pasquier@ensae.fr", role = "aut"),
+    person("Pauline", "Rossi", , "pauline.rossi@ensae.fr", role = "aut",
+           comment = c(affiliation = "CREST")),
     person("Laurine", "Meier", , "laurine.meier@ensae.fr", role = "cre")
   )
 Description: This Package aims at estimate heterogeneous peer effects for treatment models.
