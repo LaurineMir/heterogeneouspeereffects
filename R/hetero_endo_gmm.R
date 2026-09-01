@@ -710,7 +710,8 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
     
     
     # Element-wise multiplication and summation
-    moments <- t(colMeans(w_rho_matrix)) %*% solve(V) %*% colMeans(w_rho_matrix)
+    Vinv  <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
+    moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
     return(moments)
   }
   
@@ -1370,7 +1371,8 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
     
     
     # Element-wise multiplication and summation
-    moments <- t(colMeans(w_rho_matrix)) %*% solve(V) %*% colMeans(w_rho_matrix)
+    Vinv <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
+    moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
     return(moments)
   }
   
@@ -2063,7 +2065,8 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
     w_rho_matrix <- do.call(rbind, lapply(w_rho_list, as.vector))
     
     # Element-wise multiplication and summation
-    moments <- t(colMeans(w_rho_matrix)) %*% solve(V) %*% colMeans(w_rho_matrix)
+    Vinv <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
+    moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
     return(moments)
   }
   

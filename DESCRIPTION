@@ -3,10 +3,9 @@ Title: Heterogeneous Peer Effect
 Version: 0.1.0
 Authors@R: c(
     person("Felix", "Pasquier", , "felix.pasquier@ensae.fr", role = "aut"),
-    person("Pauline", "Rossi", , "pauline.rossi@ensae.fr", role = "aut",
-           comment = c(affiliation = "CREST")),
-    person("Laurine", "Meier", , "laurine.meier@ensae.fr", role = "cre")
-  )
+    person("Laurine", "Meier", , "laurine.meier@ensae.fr", role = c("aut", "cre")),
+    person("Pauline", "Rossi", , "pauline.rossi@ensae.fr", role = "aut", comment = c(affiliation = "CREST"))
+    )
 Description: This Package aims at estimate heterogeneous peer effects for treatment models.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -17,9 +16,6 @@ RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 NeedsCompilation: no
 Packaged: 2025-02-11 12:52:34 UTC; laurinemeier
-Author: Felix Pasquier [aut],
-  Pauline Rossi CREST [aut],
-  Laurine Meier [cre]
 Maintainer: Laurine Meier <laurine.meier@ensae.fr>
 URL: https://github.com/LaurineMir/heterogeneouspeereffects
 BugReports: https://github.com/LaurineMir/heterogeneouspeereffects/issues
