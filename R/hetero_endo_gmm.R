@@ -467,8 +467,12 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
   ### Etape 1-1: Define the function phi
   #'@noRd
   phi <- function(s, lambda){
-    return(1 - lambda[2]*s - lambda[3]*(1-s) + s*(1-s)*(lambda[2]*lambda[3] - lambda[4]*lambda[5]))
+    val <- 1 - lambda[2]*s - lambda[3]*(1-s) + s*(1-s)*(lambda[2]*lambda[3] - lambda[4]*lambda[5])
+    # Empêche la division par une valeur trop proche de 0
+    sign_val <- ifelse(val >= 0, 1, -1)
+    ifelse(abs(val) < 1e-6, sign_val * 1e-6, val)
   }
+    
   
   ### Etape 1-2: Define the conditional treatment effect functions
   #'@noRd
@@ -486,9 +490,11 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
     D <- Z[, 3]
     s <- Z[, 4]
     h_s <- Z[, 5]
+    h_s_clipped <- pmin(pmax(h_s, 1e-4), 1 - 1e-4)  # évite 0 et 1 exacts
+    denom_ipw <- h_s_clipped * (1 - h_s_clipped)
     
-    IPW_YE <- (((D - h_s)*YE)/(h_s*(1-h_s))) * (s > 0)
-    IPW_YN <- (((D - h_s)*YN)/(h_s*(1-h_s))) * (s < 1)
+    IPW_YE <- (((D - h_s_clipped)*YE)/(denom_ipw)) * (s > 0)
+    IPW_YN <- (((D - h_s_clipped)*YN)/(denom_ipw)) * (s < 1)
     
     m <- cbind(IPW_YE, IPW_YN) - (Num_condi_TE(s, lambda)/phi(s, lambda))
     
@@ -501,8 +507,13 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
     s <- Z[, 4]
     m <- moment_function(params, Z)
     residuals <- cbind(m, s * m, s*s * m, log(s+0.0001) * m, sqrt(s) * m, exp(s) * m, (1./(s+0.1))*m)
+    if (!all(is.finite(residuals))) return(1e10)  # pénalité finie, pas de crash
+    
     emp_moments <- colMeans(residuals)
-    return(t(emp_moments) %*% emp_moments)
+    val <- as.numeric(t(emp_moments) %*% emp_moments)
+    
+    if (!is.finite(val)) return(1e10)
+    val
   }
   
   Z_1 <- cbind(YE_part_1, YN_part_1, D_part_1, s_part_1, h_s_1)  # Combine data
@@ -698,6 +709,7 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
   gmm2_objective <- function(params, Z, w, V, G) {
     # Calcul des rho + mise sous forme de vecteurs
     residuals <- moment_function(params, Z)
+    if (!all(is.finite(residuals))) return(1e10)
     residuals_vector_list <- lapply(1:G, function(i) matrix(residuals[i, ], ncol = 1))
     
     
@@ -707,12 +719,13 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
     
     # Step 4: Combine results into an G x 5 matrix
     w_rho_matrix <- do.call(rbind, lapply(w_rho_list, as.vector))
-    
+    if (!all(is.finite(w_rho_matrix))) return(1e10)
     
     # Element-wise multiplication and summation
     Vinv  <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
     moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
-    return(moments)
+    if (!is.finite(moments)) return(1e10)
+    moments
   }
   
   
@@ -792,7 +805,7 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
   V_a <- (G_1/G)^2 * V_a_1 + (G_0/G)^2 * V_a_0
   nb_groups <- G
   Vainv <- tryCatch(solve(V_a), error = function(e) MASS::ginv(V_a))
-  standard_errors <- sqrt(diag(solve(Vainv))/nb_groups)
+  standard_errors <- sqrt(diag(Vainv)/nb_groups)
   
   t_stat <- lambda2 / standard_errors
   df <- nb_groups - 5 - 1
@@ -1128,9 +1141,11 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
   ### Etape 1-1: Define the function phi
   #'@noRd
   phi <- function(s, lambda){
-    return(1 - lambda[2] + s*(1-s)*(lambda[2]*lambda[2] - lambda[3]*lambda[3]))
+    val <- 1 - lambda[2] + s*(1-s)*(lambda[2]*lambda[2] - lambda[3]*lambda[3])
+    # Empêche la division par une valeur trop proche de 0
+    sign_val <- ifelse(val >= 0, 1, -1)
+    ifelse(abs(val) < 1e-6, sign_val * 1e-6, val)
   }
-  
   ### Etape 1-2: Define the conditional treatment effect functions
   #'@noRd
   Num_condi_TE <- function(s, lambda){
@@ -1147,9 +1162,12 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
     D <- Z[, 3]
     s <- Z[, 4]
     h_s <- Z[, 5]
+    h_s_clipped <- pmin(pmax(h_s, 1e-4), 1 - 1e-4)  # évite 0 et 1 exacts
+    denom_ipw <- h_s_clipped * (1 - h_s_clipped)
     
-    IPW_YE <- (((D - h_s)*YE)/(h_s*(1-h_s))) * (s > 0)
-    IPW_YN <- (((D - h_s)*YN)/(h_s*(1-h_s))) * (s < 1)
+    
+    IPW_YE <- (((D - h_s_clipped)*YE)/(denom_ipw)) * (s > 0)
+    IPW_YN <- (((D - h_s_clipped)*YN)/(denom_ipw)) * (s < 1)
     
     m <- cbind(IPW_YE, IPW_YN) - (Num_condi_TE(s, lambda)/phi(s, lambda))
     return(m)
@@ -1164,10 +1182,12 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
     # We create 4 empirical moment conditions
     s <- Z[, 4]
     residuals <- cbind(m, s * m, s*s * m, log(s+0.0001) * m, sqrt(s) * m, exp(s) * m, (1./(s+0.1))*m)
+    if (!all(is.finite(residuals))) return(1e10)  # pénalité finie, pas de crash
     emp_moments <- colMeans(residuals)
+    val <- as.numeric(t(emp_moments) %*% emp_moments)
     
-    # We minimise the distance
-    return(t(emp_moments) %*% emp_moments)
+    if (!is.finite(val)) return(1e10)
+    val
   }
   
   Z_1 <- cbind(YE_part_1, YN_part_1, D_part_1, s_part_1, h_s_1)  # Combine data
@@ -1359,6 +1379,8 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
   gmm2_objective <- function(params, Z, w, V, G) {
     # Calcul des rho + mise sous forme de vecteurs
     residuals <- moment_function(params, Z)
+    if (!all(is.finite(residuals))) return(1e10)
+    
     residuals_vector_list <- lapply(1:G, function(i) matrix(residuals[i, ], ncol = 1))
     
     
@@ -1368,12 +1390,13 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
     
     # Step 4: Combine results into an G x 5 matrix
     w_rho_matrix <- do.call(rbind, lapply(w_rho_list, as.vector))
-    
+    if (!all(is.finite(w_rho_matrix))) return(1e10)
     
     # Element-wise multiplication and summation
     Vinv <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
     moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
-    return(moments)
+    if (!is.finite(moments)) return(1e10)
+    moments
   }
   
   
@@ -1810,8 +1833,11 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
   
   ### Etape 1-1: Define the function phi
   #'@noRd
-  phi <- function(sM, lambda){
-    return(1 - sM*lambda[2] - (1-sM)*lambda[3]+ sM*(1-sM)*(lambda[2]*lambda[3] - lambda[4]*lambda[5]))
+  phi <- function(s, lambda){
+    val <- 1 - lambda[2]*s - lambda[3]*(1-s) + s*(1-s)*(lambda[2]*lambda[3] - lambda[4]*lambda[5])
+    # Empêche la division par une valeur trop proche de 0
+    sign_val <- ifelse(val >= 0, 1, -1)
+    ifelse(abs(val) < 1e-6, sign_val * 1e-6, val)
   }
   
   ### Etape 1-2: Define the conditional treatment effect functions
@@ -1833,8 +1859,11 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
     sEF <- Z[, 6]
     h_s <- Z[, 7]
     
-    IPW_YM <- (((D - h_s)*YM)/(h_s*(1-h_s))) * (sM > 0)
-    IPW_YF <- (((D - h_s)*YF)/(h_s*(1-h_s))) * (sM < 1)
+    h_s_clipped <- pmin(pmax(h_s, 1e-4), 1 - 1e-4)  # évite 0 et 1 exacts
+    denom_ipw <- h_s_clipped * (1 - h_s_clipped)
+    
+    IPW_YM <- (((D - h_s_clipped)*YM)/(denom_ipw)) * (sM > 0)
+    IPW_YF <- (((D - h_s_clipped)*YF)/(denom_ipw)) * (sM < 1)
     
     m <- cbind(IPW_YM, IPW_YF) - (Num_condi_TE(sM, sEM, sEF, lambda)/phi(sM, lambda))
     return(m)
@@ -1848,10 +1877,13 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
     sEF <- Z[, 6]
     m <- moment_function(params, Z)
     residuals <- cbind(m, sM * m, sEM * m, sEF * m, sEM * sM * m, sEF * sM * m, sEF * sEM * sM * m)
+    if (!all(is.finite(residuals))) return(1e10)  # pénalité finie, pas de crash
+    
     emp_moments <- colMeans(residuals)
-    #rho_p <- sapply(1:G, function(j) as.vector(kronecker(t(residuals)[, j], t(P)[, j])))
-    #moments <- t(rowMeans(rho_p)) %*% kronecker(diag(2), Inv_tPP) %*% rowMeans(rho_p)
-    return(t(emp_moments) %*% emp_moments)
+    val <- as.numeric(t(emp_moments) %*% emp_moments)
+    
+    if (!is.finite(val)) return(1e10)
+    val
   }
   
   Z_1 <- cbind(YM_part_1, YF_part_1, D_part_1, sM_part_1, sEM_part_1, sEF_part_1, h_s_1)  # Combine data
@@ -2056,6 +2088,7 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
   gmm2_objective <- function(params, Z, w, V, G) {
     # Calcul des rho + mise sous forme de vecteurs
     residuals <- moment_function(params, Z)
+    if (!all(is.finite(residuals))) return(1e10)
     residuals_vector_list <- lapply(1:G, function(i) matrix(residuals[i, ], ncol = 1))
     
     # Step 3: Multiply each 3x2 matrix with the corresponding 2x1 vector
@@ -2063,11 +2096,12 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
     
     # Step 4: Combine results into an G x 3 matrix
     w_rho_matrix <- do.call(rbind, lapply(w_rho_list, as.vector))
-    
+    if (!all(is.finite(w_rho_matrix))) return(1e10)
     # Element-wise multiplication and summation
     Vinv <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
     moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
-    return(moments)
+    if (!is.finite(moments)) return(1e10)
+    moments
   }
   
   opt2_1 <- optim(
