@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R: c(
     person("Felix", "Pasquier", , "felix.pasquier@ensae.fr", role = "aut"),
     person("Laurine", "Meier", , "laurine.meier@ensae.fr", role = c("aut", "cre")),
-    person("Pauline", "Rossi", , "pauline.rossi@ensae.fr", role = "aut", comment = c(affiliation = "CREST"))
+    person("Pauline", "Rossi", , "pauline.rossi@ensae.fr", role = "aut")
     )
 Description: This Package aims at estimate heterogeneous peer effects for treatment models.
 License: MIT + file LICENSE
@@ -12,6 +12,7 @@ Encoding: UTF-8
 Imports: dplyr, ggplot2, purrr, knitr, flextable, caret, MASS,mvtnorm
 Suggests: rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
+Author: Felix Pasquier [aut], Laurine Meier [aut, cre], Pauline Rossi [aut] (CREST)
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 NeedsCompilation: no
