@@ -791,8 +791,8 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
   
   V_a <- (G_1/G)^2 * V_a_1 + (G_0/G)^2 * V_a_0
   nb_groups <- G
-  
-  standard_errors <- sqrt(diag(solve(V_a))/nb_groups)
+  Vainv <- tryCatch(solve(V_a), error = function(e) MASS::ginv(V_a))
+  standard_errors <- sqrt(diag(solve(Vainv))/nb_groups)
   
   t_stat <- lambda2 / standard_errors
   df <- nb_groups - 5 - 1
@@ -1451,8 +1451,8 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
   
   V_a <- (G_1/G)^2 * V_a_1 + (G_0/G)^2 * V_a_0
   nb_groups <- G
-  
-  standard_errors <- sqrt(diag(solve(V_a))/nb_groups)
+  Vainv <- tryCatch(solve(V_a), error = function(e) MASS::ginv(V_a))
+  standard_errors <- sqrt(Vainv/nb_groups)
   
   t_stat <- lambda2 / standard_errors
   df <- nb_groups - 3 - 1
@@ -2133,7 +2133,8 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
     predict_V_s2_0 <- predict(lm(formula_V_s2_1, data = df_part_1), newdata = df_part_0)
   }
   V_a <- (G_1/G)^2 * V_a_1 + (G_0/G)^2 * V_a_0
-  sd <- sqrt(diag(solve(V_a))/G)
+  Vainv <- tryCatch(solve(V_a), error = function(e) MASS::ginv(V_a))
+  sd <- sqrt(diag(Vainv)/G)
   
   t_stat <- lambda2 / sd
   df <- G - 5 - 1  
