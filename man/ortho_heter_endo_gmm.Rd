@@ -28,6 +28,7 @@ dataframe of the estimates values of direct effect (delta), within effect among 
 Two-Step GMM Estimation of Heterogeneous Peer Effects with Orthogonal Identity-Based Eligibility
 }
 \examples{
+\donttest{
 delta = -3
 thetaWM = 0.6
 thetaWW = 0.2
@@ -65,4 +66,5 @@ thetaBMW * (1 - sM) * (alphaX[,2] + beta_W * alphaX[,4]) +
 # Resultats analytique
 result_ortho <- ortho_heter_endo_gmm(YM, YW, D, sM, sME, sWE)
 print(result_ortho)
+}
 }

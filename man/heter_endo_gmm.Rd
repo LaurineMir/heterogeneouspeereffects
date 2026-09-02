@@ -26,6 +26,7 @@ dataframe with the estimates values of direct effect (delta), intra_group effect
 Two-Step GMM Estimation of Heterogeneous Peer Effects When Identity Equals Eligibility
 }
 \examples{
+\donttest{
 # Parameters
 delta = -3
 thetaW = 0.7
@@ -58,4 +59,5 @@ YE <- ((1 - thetaW * s) * (1 - s) * thetaB * (alphaX[,1] + beta_NE * alphaX[,3])
 delta * (1 + thetaW * (s * (1 - s) * thetaW - 1)) * D) /
  ((1 - thetaW * s) * (1 - thetaW + s * (1 - s) * (thetaW^2 - thetaB^2)))
 result_simple_5param <- heter_endo_gmm(YE, YN, D, s)
+}
 }
