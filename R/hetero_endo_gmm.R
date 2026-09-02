@@ -38,6 +38,7 @@ utils::globalVariables(c("tau", "Type"))
 #' @param tol : convergency criteria of optimization
 #' @return dataframe with the estimates values of direct effect (delta), intra_group effect (theta_within), inter-group effect(theta_between) and their standard errors.
 #' @examples
+#' \donttest{
 #' # Parameters
 #'delta = -3
 #'thetaW = 0.7
@@ -72,6 +73,7 @@ utils::globalVariables(c("tau", "Type"))
 #'  ((1 - thetaW * s) * (1 - thetaW + s * (1 - s) * (thetaW^2 - thetaB^2)))
 
 #'result_simple_5param <- heter_endo_gmm(YE, YN, D, s)
+#'}
 #' @name heter_endo_gmm
 #'@export
 heter_endo_gmm <- function(YE, YN, D, s, n_param = 5, tol = 1e-6) {
@@ -116,6 +118,7 @@ heter_endo_gmm <- function(YE, YN, D, s, n_param = 5, tol = 1e-6) {
 #' @param tol : convergency criteria of optimization
 #' @return dataframe of the estimates values of direct effect (delta), within effect among male (theta_within_M),within effect among female (theta_within_F), between effect from male to female (theta_between_F_M),  between effect from female to male (theta_between_M_F) and their standard errors.
 #' @examples
+#' \donttest{
 #'delta = -3
 #'thetaWM = 0.6
 #'thetaWW = 0.2
@@ -160,6 +163,7 @@ heter_endo_gmm <- function(YE, YN, D, s, n_param = 5, tol = 1e-6) {
 #'# Resultats analytique
 #'result_ortho <- ortho_heter_endo_gmm(YM, YW, D, sM, sME, sWE)
 #'print(result_ortho)
+#'}
 #'@name ortho_heter_endo_gmm
 #'@export
 ortho_heter_endo_gmm <- function(YM, YF, D, sM, sEM, sEF, tol = 1e-6) {
