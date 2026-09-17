@@ -5,19 +5,6 @@
 
 # Load necessary libraries
 
-#install.packages("dplyr")
-#library(dplyr)
-#install.packages("ggplot2")
-#library(ggplot2)
-#install.packages("purrr")
-#library(purrr)
-#install.packages("mvtnorm")
-#library(mvtnorm)
-#install.packages("haven")
-#library(kableExtra)
-#install.packages("knitr")
-#library(knitr)
-
 utils::globalVariables(c("tau", "Type"))
 #########################
 #### FINAL FUNCTIONS ####
@@ -36,7 +23,14 @@ utils::globalVariables(c("tau", "Type"))
 #' @param s share of eligible individuals in the group (vector)
 #' @param n_param : number of parameters to estimate
 #' @param tol : convergency criteria of optimization
-#' @return dataframe with the estimates values of direct effect (delta), intra_group effect (theta_within), inter-group effect(theta_between) and their standard errors.
+#' @return A list with three elements:
+#'   \item{estimates}{data frame with the estimated values of the direct
+#'     effect (delta), intra-group effect (theta_within), inter-group effect
+#'     (theta_between) and their standard errors.}
+#'   \item{table}{a \code{flextable} object formatting \code{estimates} for
+#'     display.}
+#'   \item{plot}{a \code{ggplot} object showing the treatment effects on
+#'     eligible and non-eligible individuals across values of \code{s}.}
 #' @examples
 #' \donttest{
 #' # Parameters
@@ -73,6 +67,12 @@ utils::globalVariables(c("tau", "Type"))
 #'  ((1 - thetaW * s) * (1 - thetaW + s * (1 - s) * (thetaW^2 - thetaB^2)))
 
 #'result_simple_5param <- heter_endo_gmm(YE, YN, D, s)
+#'# Access the estimates data frame:
+#'result_simple_5param$estimates
+#'# Display the formatted table:
+#'# print(result_simple_5param$table)
+#'# Display the treatment effect plot:
+#'# print(result_simple_5param$plot)
 #'}
 #' @name heter_endo_gmm
 #'@export
@@ -116,7 +116,14 @@ heter_endo_gmm <- function(YE, YN, D, s, n_param = 5, tol = 1e-6) {
 #' @param sEM share of eligible "male" individuals in the group (vector)
 #' @param sEF share of eligible "female" individuals in the group (vector)
 #' @param tol : convergency criteria of optimization
-#' @return dataframe of the estimates values of direct effect (delta), within effect among male (theta_within_M),within effect among female (theta_within_F), between effect from male to female (theta_between_F_M),  between effect from female to male (theta_between_M_F) and their standard errors.
+#' @return A list with two elements:
+#'   \item{estimates}{data frame with the estimated values of the direct
+#'     effect (delta), within effect among male (theta_within_M), within
+#'     effect among female (theta_within_F), between effect from male to
+#'     female (theta_between_F_M), between effect from female to male
+#'     (theta_between_M_F) and their standard errors.}
+#'   \item{table}{a \code{flextable} object formatting \code{estimates} for
+#'     display.}
 #' @examples
 #' \donttest{
 #'delta = -3
@@ -162,7 +169,8 @@ heter_endo_gmm <- function(YE, YN, D, s, n_param = 5, tol = 1e-6) {
 
 #'# Resultats analytique
 #'result_ortho <- ortho_heter_endo_gmm(YM, YW, D, sM, sME, sWE)
-#'print(result_ortho)
+#'result_ortho$estimates
+#'# print(result_ortho$table)
 #'}
 #'@name ortho_heter_endo_gmm
 #'@export
@@ -517,7 +525,7 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
     val <- as.numeric(t(emp_moments) %*% emp_moments)
     
     if (!is.finite(val)) return(1e10)
-    val
+    return(val)
   }
   
   Z_1 <- cbind(YE_part_1, YN_part_1, D_part_1, s_part_1, h_s_1)  # Combine data
@@ -729,7 +737,7 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
     Vinv  <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
     moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
     if (!is.finite(moments)) return(1e10)
-    moments
+    return(moments)
   }
   
   
@@ -835,8 +843,6 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
       thetaBNE = "ThetaW (\u03B8bNE)",
       thetaBEN = "ThetaB (\u03B8bEN)"
     )
-  print(ft)
-  print(knitr::kable(result_df))
   
   # Fonction treatment effect
   #'@noRd
@@ -862,7 +868,7 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
   )
   
   # Tracer avec ggplot2
-  print(ggplot2::ggplot(df, ggplot2::aes(x = s, y = tau, color = Type))+
+  p <-ggplot2::ggplot(df, ggplot2::aes(x = s, y = tau, color = Type))+
           ggplot2::geom_line(linewidth = 1.2) +
           ggplot2::theme_minimal() +
           ggplot2::labs(title = "Treatment effects on eligibles and non-eligibles", 
@@ -874,10 +880,10 @@ unknown_prop_score_5param_gmm <- function(YE, YN, D, s, tol = 1e-6) {
             plot.title = ggplot2::element_text(hjust = 0.5, size = 16),
             axis.title = ggplot2::element_text(size = 14),
             axis.text = ggplot2::element_text(size = 12)
-          ))
+          )
   
   
-  return(result_df)
+ return(list(estimates = result_df, table = ft, plot = p))
 }
 
 # Case 2 : unknown propensity score with 
@@ -1400,7 +1406,7 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
     Vinv <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
     moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
     if (!is.finite(moments)) return(1e10)
-    moments
+    return(moments)
   }
   
   
@@ -1501,8 +1507,6 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
       thetaW = "ThetaW (\u03B8w)",
       thetaB = "ThetaB (\u03B8b)"
     )
-  print(ft)
-  print(knitr::kable(result_df))
   
   # Fonction treatment effect
   #'@noRd
@@ -1528,7 +1532,7 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
   )
   
   # Tracer avec ggplot2
-  print(ggplot2::ggplot(df, ggplot2::aes(x = s, y = tau, color = Type))+
+  p <-ggplot2::ggplot(df, ggplot2::aes(x = s, y = tau, color = Type))+
           ggplot2::geom_line(linewidth = 1.2) +
           ggplot2::theme_minimal() +
           ggplot2::labs(title = "Treatment effects on eligibles and non-eligibles", x = "s", y = "Total Effect") +
@@ -1537,10 +1541,10 @@ unknown_prop_score_3param_gmm <- function(YE, YN, D, s, cluster = NULL, tol = 1e
             plot.title = ggplot2::element_text(hjust = 0.5, size = 16),
             axis.title = ggplot2::element_text(size = 14),
             axis.text = ggplot2::element_text(size = 12)
-          ))
+          )
   
   
-  return(result_df)
+  return(list(estimates = result_df, table = ft, plot = p))
 }
 
 
@@ -1887,7 +1891,7 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
     val <- as.numeric(t(emp_moments) %*% emp_moments)
     
     if (!is.finite(val)) return(1e10)
-    val
+    return(val)
   }
   
   Z_1 <- cbind(YM_part_1, YF_part_1, D_part_1, sM_part_1, sEM_part_1, sEF_part_1, h_s_1)  # Combine data
@@ -2105,7 +2109,7 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
     Vinv <- tryCatch(solve(V), error = function(e) MASS::ginv(V))
     moments <- t(colMeans(w_rho_matrix)) %*% Vinv %*% colMeans(w_rho_matrix)
     if (!is.finite(moments)) return(1e10)
-    moments
+    return(moments)
   }
   
   opt2_1 <- optim(
@@ -2198,14 +2202,8 @@ ortho_unknown_prop_score_5param_gmm <- function(YM, YF, D, sM, sEM, sEF,  tol = 
                                      
   ft <- flextable::theme_vanilla(ft)
   ft <- flextable::autofit(ft)    
-  print(ft)
-  
-  # Affichage alternatif avec knitr::kable (Markdown/Tableau LaTeX)
-  print(knitr::kable(result_df, format = "markdown", digits = 3, align = "c"))
-  
 
-  
-  return(result_df)
+  return(list(estimates = result_df, table = ft))
   
 }
 

@@ -20,7 +20,14 @@ heter_endo_gmm(YE, YN, D, s, n_param = 5, tol = 1e-06)
 \item{tol}{: convergency criteria of optimization}
 }
 \value{
-dataframe with the estimates values of direct effect (delta), intra_group effect (theta_within), inter-group effect(theta_between) and their standard errors.
+A list with three elements:
+  \item{estimates}{data frame with the estimated values of the direct
+    effect (delta), intra-group effect (theta_within), inter-group effect
+    (theta_between) and their standard errors.}
+  \item{table}{a \code{flextable} object formatting \code{estimates} for
+    display.}
+  \item{plot}{a \code{ggplot} object showing the treatment effects on
+    eligible and non-eligible individuals across values of \code{s}.}
 }
 \description{
 Two-Step GMM Estimation of Heterogeneous Peer Effects When Identity Equals Eligibility
@@ -59,5 +66,11 @@ YE <- ((1 - thetaW * s) * (1 - s) * thetaB * (alphaX[,1] + beta_NE * alphaX[,3])
 delta * (1 + thetaW * (s * (1 - s) * thetaW - 1)) * D) /
  ((1 - thetaW * s) * (1 - thetaW + s * (1 - s) * (thetaW^2 - thetaB^2)))
 result_simple_5param <- heter_endo_gmm(YE, YN, D, s)
+# Access the estimates data frame:
+result_simple_5param$estimates
+# Display the formatted table:
+# print(result_simple_5param$table)
+# Display the treatment effect plot:
+# print(result_simple_5param$plot)
 }
 }

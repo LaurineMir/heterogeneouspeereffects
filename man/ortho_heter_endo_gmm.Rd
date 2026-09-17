@@ -22,7 +22,14 @@ ortho_heter_endo_gmm(YM, YF, D, sM, sEM, sEF, tol = 1e-06)
 \item{tol}{: convergency criteria of optimization}
 }
 \value{
-dataframe of the estimates values of direct effect (delta), within effect among male (theta_within_M),within effect among female (theta_within_F), between effect from male to female (theta_between_F_M),  between effect from female to male (theta_between_M_F) and their standard errors.
+A list with two elements:
+  \item{estimates}{data frame with the estimated values of the direct
+    effect (delta), within effect among male (theta_within_M), within
+    effect among female (theta_within_F), between effect from male to
+    female (theta_between_F_M), between effect from female to male
+    (theta_between_M_F) and their standard errors.}
+  \item{table}{a \code{flextable} object formatting \code{estimates} for
+    display.}
 }
 \description{
 Two-Step GMM Estimation of Heterogeneous Peer Effects with Orthogonal Identity-Based Eligibility
@@ -65,6 +72,7 @@ thetaBMW * (1 - sM) * (alphaX[,2] + beta_W * alphaX[,4]) +
     sM * (1 - sM) * (thetaWW * thetaWM - thetaBWM * thetaBMW))
 # Resultats analytique
 result_ortho <- ortho_heter_endo_gmm(YM, YW, D, sM, sME, sWE)
-print(result_ortho)
+result_ortho$estimates
+# print(result_ortho$table)
 }
 }
